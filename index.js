@@ -20,21 +20,27 @@ async function postToX() {
     try {
         console.log('--- Starting Post Process ---');
 
+        const isDryRun = process.env.DRY_RUN === 'true';
+        if (isDryRun) {
+            console.log('DRY RUN MODE: Enabled');
+        }
+
         // Adjust delay for GitHub Actions (10-20 mins) to avoid job timeout but keep randomness
         const minDelay = 10;
         const maxExtraDelay = 10;
         const delayMinutes = Math.floor(Math.random() * maxExtraDelay) + minDelay;
 
-        if (process.env.NODE_ENV !== 'test') {
+        if (process.env.NODE_ENV !== 'test' && !isDryRun) {
             console.log(`Waiting for ${delayMinutes} minutes to mimic human behavior and avoid automated detection...`);
             await new Promise(resolve => setTimeout(resolve, delayMinutes * 60 * 1000));
+        } else if (isDryRun) {
+            console.log('Skipping delay due to DRY_RUN mode.');
         }
 
         // 1. Fetch Latest Samples
         const samples = await fetchLatestSamples();
         if (!samples || samples.length === 0) {
-            console.log('No samples found to post.');
-            return;
+            throw new Error('No samples found to post.');
         }
 
         // 2. Pick a random sample
@@ -48,19 +54,36 @@ async function postToX() {
         console.log('Generating content with AI...');
         const postText = await generateAIPost(template, sample.title);
 
-        console.log(`Final Post Text:\n${postText}`);
+        console.log('--- Post Content ---');
+        console.log(postText);
+        console.log('--- End of Content ---');
 
         // 4. (Optional) Upload Media - Future improvement
 
         // 5. Post Tweet
-        await rwClient.v2.tweet(postText);
-        console.log('--- Successfully posted to X! ---');
+        if (isDryRun) {
+            console.log('DRY RUN: Skipping actual tweet posting.');
+        } else {
+            const { data: createdTweet } = await rwClient.v2.tweet(postText);
+            console.log('--- Successfully posted to X! ---');
+            console.log(`Tweet ID: ${createdTweet.id}`);
+            console.log(`Tweet Text: ${createdTweet.text}`);
+        }
 
     } catch (error) {
-        console.error('Error during post process:', error);
-        if (error.code === 401) {
-            console.error('Check your X API credentials in .env');
+        console.error('CRITICAL: Error during post process:');
+        console.error(error);
+
+        if (error.code === 401 || (error.data && error.data.status === 401)) {
+            console.error('AUTHENTICATION ERROR: Check your X API credentials (API Key, Secret, Access Token, etc.) in .env or GitHub Secrets.');
         }
+
+        if (error.data) {
+            console.error('API Response Data:', JSON.stringify(error.data, null, 2));
+        }
+
+        // Exit with non-zero status to signal failure to GitHub Actions
+        process.exit(1);
     }
 }
 

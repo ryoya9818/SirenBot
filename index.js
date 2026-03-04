@@ -11,6 +11,13 @@ const client = new TwitterApi({
     accessSecret: process.env.X_ACCESS_TOKEN_SECRET,
 });
 
+// Check if credentials are provided (without leaking them)
+console.log('Checking X API Credentials...');
+console.log(`X_API_KEY: ${process.env.X_API_KEY ? 'Present' : 'MISSING'}`);
+console.log(`X_API_KEY_SECRET: ${process.env.X_API_KEY_SECRET ? 'Present' : 'MISSING'}`);
+console.log(`X_ACCESS_TOKEN: ${process.env.X_ACCESS_TOKEN ? 'Present' : 'MISSING'}`);
+console.log(`X_ACCESS_TOKEN_SECRET: ${process.env.X_ACCESS_TOKEN_SECRET ? 'Present' : 'MISSING'}`);
+
 const rwClient = client.readWrite;
 
 /**

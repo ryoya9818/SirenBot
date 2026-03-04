@@ -2,6 +2,8 @@ require('dotenv').config();
 const { TwitterApi } = require('twitter-api-v2');
 const { fetchLatestSamples } = require('./lib/content');
 const { getRandomTemplate } = require('./lib/templates');
+const fs = require('fs');
+const path = require('path');
 
 // Initialize Twitter Client
 const client = new TwitterApi({
@@ -65,13 +67,46 @@ async function postToX() {
         console.log(postText);
         console.log('--- End of Content ---');
 
-        // 4. (Optional) Upload Media - Future improvement
+        // 4. (Optional) Upload Media
+        let mediaId = null;
+        if (process.env.ENABLE_VIDEO === 'true') {
+            try {
+                const mediaDir = path.join(__dirname, 'media');
+                if (fs.existsSync(mediaDir)) {
+                    const files = fs.readdirSync(mediaDir).filter(f => f.endsWith('.mp4'));
+                    if (files.length > 0) {
+                        const randomVideo = files[Math.floor(Math.random() * files.length)];
+                        const videoPath = path.join(mediaDir, randomVideo);
+
+                        console.log(`Uploading Video: ${randomVideo}...`);
+
+                        if (isDryRun) {
+                            console.log(`DRY RUN: Would upload ${videoPath}`);
+                            mediaId = 'mock_media_id';
+                        } else {
+                            // Using v1 API for media upload as required by Twitter
+                            mediaId = await client.v1.uploadMedia(videoPath);
+                            console.log(`Video uploaded successfully. Media ID: ${mediaId}`);
+                        }
+                    } else {
+                        console.log('No .mp4 files found in media directory.');
+                    }
+                }
+            } catch (mediaError) {
+                console.error('Error uploading media (continuing without video):', mediaError);
+            }
+        }
 
         // 5. Post Tweet
         if (isDryRun) {
             console.log('DRY RUN: Skipping actual tweet posting.');
         } else {
-            const { data: createdTweet } = await rwClient.v2.tweet(postText);
+            const tweetConfig = { text: postText };
+            if (mediaId && mediaId !== 'mock_media_id') {
+                tweetConfig.media = { media_ids: [mediaId] };
+            }
+
+            const { data: createdTweet } = await rwClient.v2.tweet(tweetConfig);
             console.log('--- Successfully posted to X! ---');
             console.log(`Tweet ID: ${createdTweet.id}`);
             console.log(`Tweet Text: ${createdTweet.text}`);

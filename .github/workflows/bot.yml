@@ -1,0 +1,30 @@
+name: X Bot Scheduler
+
+on:
+  schedule:
+    - cron: '0 0,8,16 * * *' # 0:00, 8:00, 16:00 UTC (9:00, 17:00, 1:00 JST)
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  tweet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Bot
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_KEY_SECRET: ${{ secrets.X_API_KEY_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          SITE_URL: https://sirenav.com
+        run: node index.js

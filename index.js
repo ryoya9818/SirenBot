@@ -2,8 +2,6 @@ require('dotenv').config();
 const { TwitterApi } = require('twitter-api-v2');
 const { fetchLatestSamples } = require('./lib/content');
 const { getRandomTemplate } = require('./lib/templates');
-const fs = require('fs');
-const path = require('path');
 
 // Initialize Twitter Client
 const client = new TwitterApi({

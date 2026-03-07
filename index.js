@@ -56,6 +56,7 @@ async function postToX() {
 
         // 3. Generate Post Text
         const { generateAIPost } = require('./lib/ai');
+        const { CTA_TEXTS } = require('./lib/constants');
         const template = getRandomTemplate();
 
         console.log('Generating content with AI...');
@@ -65,16 +66,27 @@ async function postToX() {
         console.log(postText);
         console.log('--- End of Content ---');
 
-        // 4. (Optional) Upload Media - Future improvement
-
-        // 5. Post Tweet
+        // 4. Post Tweet and Reply
         if (isDryRun) {
             console.log('DRY RUN: Skipping actual tweet posting.');
+            console.log(`WOULD POST REPLY WITH URL: ${sample.url}`);
         } else {
+            // Step 1: Post Main Tweet
             const { data: createdTweet } = await rwClient.v2.tweet(postText);
-            console.log('--- Successfully posted to X! ---');
+            console.log('--- Successfully posted main tweet! ---');
             console.log(`Tweet ID: ${createdTweet.id}`);
-            console.log(`Tweet Text: ${createdTweet.text}`);
+
+            // Step 2: Post Reply with URL
+            const cta = CTA_TEXTS[Math.floor(Math.random() * CTA_TEXTS.length)];
+            const replyText = `${cta} ${sample.url}`;
+
+            console.log(`Posting reply: ${replyText}`);
+            const { data: replyTweet } = await rwClient.v2.tweet(replyText, {
+                reply: { in_reply_to_tweet_id: createdTweet.id }
+            });
+
+            console.log('--- Successfully posted reply with URL! ---');
+            console.log(`Reply ID: ${replyTweet.id}`);
         }
 
     } catch (error) {

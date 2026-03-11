@@ -69,7 +69,7 @@ async function postToX() {
         // 4. Post Tweet and Reply
         if (isDryRun) {
             console.log('DRY RUN: Skipping actual tweet posting.');
-            console.log(`WOULD POST REPLY WITH URL: ${sample.url}`);
+            console.log(`WOULD POST REPLY WITH URL: https://lit.link/sirenav`);
         } else {
             // Step 1: Post Main Tweet
             const { data: createdTweet } = await rwClient.v2.tweet(postText);
@@ -78,7 +78,7 @@ async function postToX() {
 
             // Step 2: Post Reply with URL
             const cta = CTA_TEXTS[Math.floor(Math.random() * CTA_TEXTS.length)];
-            const replyText = `${cta} ${sample.url}`;
+            const replyText = `${cta} https://lit.link/sirenav`;
 
             console.log(`Posting reply: ${replyText}`);
             const { data: replyTweet } = await rwClient.v2.tweet(replyText, {

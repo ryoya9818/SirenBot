@@ -1,8 +1,8 @@
 name: X Bot Scheduler
 
 on:
-  schedule:
-    - cron: '0 0,8,16 * * *' # 0:00, 8:00, 16:00 UTC (9:00, 17:00, 1:00 JST)
+#  schedule:
+#    - cron: '0 0,8,16 * * *' # 0:00, 8:00, 16:00 UTC (9:00, 17:00, 1:00 JST)
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -15,10 +15,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run Bot
         env:

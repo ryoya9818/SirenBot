@@ -44,6 +44,8 @@ async function postToX() {
             console.log('Skipping delay due to DRY_RUN mode.');
         }
 
+        console.log('--- Delay finished, proceeding with data fetch ---');
+
         // 1. Fetch Latest Samples
         const samples = await fetchLatestSamples();
         if (!samples || samples.length === 0) {
@@ -99,6 +101,15 @@ async function postToX() {
 
         if (error.data) {
             console.error('API Response Data:', JSON.stringify(error.data, null, 2));
+        }
+
+        if (error.response) {
+            try {
+                const errorBody = await error.response.json();
+                console.error('API Error Body:', JSON.stringify(errorBody, null, 2));
+            } catch (e) {
+                // Ignore if not JSON
+            }
         }
 
         // Exit with non-zero status to signal failure to GitHub Actions
